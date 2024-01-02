@@ -1,6 +1,6 @@
  # Fedora 39 Post Install Guide
-Things to do after installing Fedora 39
-
+ Things to do after installing Fedora 39 (specially for Dell XPS 9570) 
+ 
 ## Faster Updates
 * `sudo nano /etc/dnf/dnf.conf` 
 * Copy and replace the text with the following:
@@ -40,24 +40,56 @@ sudo fwupdmgr update
 ## NVIDIA Drivers
 * Only follow this if you have a NVIDIA gpu. Also, don't follow this if you have a gpu which has dropped support for newer driver releases i.e. anything earlier than nvidia GT/GTX 600, 700, 800, 900, 1000, 1600 and RTX 2000, 3000, 4000 series. Fedora comes preinstalled with NOUVEAU drivers which may or may not work better on those remaining older GPUs. This should be followed by Desktop and Laptop users alike.
 * Disable Secure Boot.
-* `sudo dnf update` #To make sure you're on the latest kernel and then reboot.
-* Enable RPM Fusion Nvidia non-free repository in the app store and install it from there,
-* or alternatively
-* `sudo dnf install akmod-nvidia`
-* Install this if you use applications that can utilise CUDA i.e. Davinci Resolve, Blender etc.
-* `sudo dnf install xorg-x11-drv-nvidia-cuda`
-* Wait for atleast 5 mins before rebooting, to let the kermel module get built.
-* `modinfo -F version nvidia` #Check if the kernel module is built.
-* Reboot
+* `sudo dnf install gcc kernel-headers kernel-devel akmod-nvidia xorg-x11-drv-nvidia xorg-x11-drv-nvidia-libs xorg-x11-drv-nvidia-libs.i686 xorg-x11-drv-nvidia-power`
+* [Optional] `sudo dnf install xorg-x11-drv-nvidia-cuda`
+* `sudo dnf install vulkan`
+* [Optional] `sudo dnf install vdpauinfo libva-vdpau-driver libva-utils`
+* Wait for at least 5 mins before the next step, to let the kernel module get built.
+* Force the akmods to rebuild.
+* `sudo akmods --force`
+* `sudo dracut --force`
+* Wait another 5 minutes.
+* Reboot.
+* Test whether the drivers have been installed correctly:
+
+```shell
+lsmod | grep nvidia
+modinfo -V nvidia
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia glxinfo | grep vendor
+```
+
+* The output should look like this:
+
+```
+nvidia_drm            118784  4
+nvidia_modeset       1585152  2 nvidia_drm
+nvidia_uvm           3522560  0
+nvidia              62394368  37 nvidia_uvm,nvidia_modeset
+video                  77824  4 dell_wmi,dell_laptop,i915,nvidia_modeset
+kmod version 30
++ZSTD +XZ +ZLIB +LIBCRYPTO -EXPERIMENTAL
+server glx vendor string: SGI
+client glx vendor string: NVIDIA Corporation
+OpenGL vendor string: NVIDIA Corporation
+```
+
+* Last, but not least, let's fix a sleep state problem that's happening to XPS 15s, including, but not limited to, 9560s and 9570s:
+* `sudo grubby --update-kernel=ALL --args="mem_sleep_default=deep"`
 
 ## Battery Life
 * Follow this if you have a Laptop and are facing sub optimal battery backup.
 * power-profiles-daemon which come pre-configured works great on a great majority of systems but still in case you're facing sub-optimal battery backup you try installing tlp by:
 * `sudo dnf install tlp tlp-rdw`
+* `sudo systemctl start tlp`
+* `sudo systemctl enable tlp`
 * and mask power-profiles-daemon by:
 * `sudo systemctl mask power-profiles-daemon`
+* and mask systemd-rfkill by:
+* `sudo systemctl mask systemd-rfkill.service systemd-rfkill.socket`
 * Also install powertop by:
 * `sudo dnf install powertop`
+* `sudo systemctl start powertop`
+* `sudo systemctl enable powertop`
 * `sudo powertop --auto-tune`
 
 ## Media Codecs
@@ -71,26 +103,11 @@ sudo dnf group upgrade --with-optional Multimedia
 ````
 
 ## H/W Video Acceleration
-* Helps decrease load on the CPU when watching videos online by alloting the rendering to the dGPU/iGPU. Quite helpful in increasing battery backup on laptops.
+* Helps decrease load on the CPU when watching videos online by alloting the rendering to the dGPU/iGPU. It is quite helpful in increasing battery backup on laptops.
 
 ### H/W Video Decoding with VA-API 
 * `sudo dnf install ffmpeg ffmpeg-libs libva libva-utils`
-
-<details>
-<summary>Intel</summary>
- 
-* If you have an intel chipset after installing the packages above., Do:
 * `sudo dnf install intel-media-driver`
-</details>
-
-<details>
-<summary>AMD</summary>No need to do this for intel integrated graphics. Mesa drivers are for AMD graphics, who lost support for h264/h245 in the fedora repositories in f38 due to legal concerns.
- 
-* If you have an AMD chipset, after installing the packages above do:
-```
-sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
-```
-</details>
 
 ### OpenH264 for Firefox
 * `sudo dnf config-manager --set-enabled fedora-cisco-openh264`
@@ -124,11 +141,6 @@ DNSOverTLS=yes
 * Increases performance in multithreaded systems. The more cores you have in your cpu the greater the performance gain. 5-30% performance gain varying upon systems. Do not follow this if you share services and files through your network or are using fedora in a VM. 
 * Modern intel CPUs (above 10th gen) do not gain noticeable performance improvements upon disabling mitigations. Hence, disabling mitigations can present some security risks against various attacks, however, it still _might_ increase the CPU performance of your system.
 * `sudo grubby --update-kernel=ALL --args="mitigations=off"`
-
-### Modern Standby
-* Can result in better battery life when your laptop goes to sleep.
-* `sudo grubby --update-kernel=ALL --args="mem_sleep_default=s2idle"`
-* If "s2idle" doesn't work for you i.e. people with alder lake CPUs, then you might want to refer to [this](https://www.reddit.com/r/linuxhardware/comments/ng166t/s3_deep_sleep_not_working/)
 
 ### Enable nvidia-modeset 
 * Useful if you have a laptop with an Nvidia GPU. Necessary for some PRIME-related interoperability features.
