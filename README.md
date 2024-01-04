@@ -196,7 +196,9 @@ DNSOverTLS=yes
 
 ### Use themes in Flatpaks
 * `sudo flatpak override --filesystem=$HOME/.themes`
-* `sudo flatpak override --env=GTK_THEME=my-theme` 
+* `sudo flatpak override --filesystem=$HOME/.local/share/icons`
+* `sudo flatpak override --env=GTK_THEME=my-theme`
+* `sudo flatpak override --env=ICON_THEME=my-icon`
 
 ### Icon Packs
 * https://github.com/vinceliuice/Tela-icon-theme
