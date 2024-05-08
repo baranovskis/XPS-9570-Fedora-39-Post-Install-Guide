@@ -19,11 +19,13 @@ deltarpm=true
 
 ## RPM Fusion
 * Fedora has disabled the repositories for a lot of free and non-free .rpm packages by default. Follow this if you want to use non-free software like Steam, Discord and some multimedia codecs etc. As a general rule of thumb its advised to do this get access to many mainstream useful programs.
+* If you forgot to enable third party repositories during the initial setup window, enable them by pasting the following into the terminal: 
 * `sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm`
 * also while you're at it, install app-stream metadata by
 * `sudo dnf groupupdate core`
 
 ## Update 
+* Go into the software center and click on update. Alternatively, you can use the following commands:
 * `sudo dnf -y update`
 * `sudo dnf -y upgrade --refresh`
 * Reboot
@@ -40,16 +42,15 @@ sudo fwupdmgr update
 ## NVIDIA Drivers
 * Only follow this if you have a NVIDIA gpu. Also, don't follow this if you have a gpu which has dropped support for newer driver releases i.e. anything earlier than nvidia GT/GTX 600, 700, 800, 900, 1000, 1600 and RTX 2000, 3000, 4000 series. Fedora comes preinstalled with NOUVEAU drivers which may or may not work better on those remaining older GPUs. This should be followed by Desktop and Laptop users alike.
 * Disable Secure Boot.
-* `sudo dnf install gcc kernel-headers kernel-devel akmod-nvidia xorg-x11-drv-nvidia xorg-x11-drv-nvidia-libs xorg-x11-drv-nvidia-libs.i686 xorg-x11-drv-nvidia-power`
-* [Optional] `sudo dnf install xorg-x11-drv-nvidia-cuda`
-* `sudo dnf install vulkan`
-* [Optional] `sudo dnf install vdpauinfo libva-vdpau-driver libva-utils`
-* Wait for at least 5 mins before the next step, to let the kernel module get built.
-* Force the akmods to rebuild.
-* `sudo akmods --force`
-* `sudo dracut --force`
-* Wait another 5 minutes.
-* Reboot.
+* `sudo dnf update` #To make sure you're on the latest kernel and then reboot.
+* Enable RPM Fusion Nvidia non-free repository in the app store and install it from there,
+* or alternatively
+* `sudo dnf install akmod-nvidia`
+* Install this if you use applications that can utilise CUDA i.e. Davinci Resolve, Blender etc.
+* `sudo dnf install xorg-x11-drv-nvidia-cuda`
+* Wait for atleast 5 mins before rebooting, to let the kermel module get built.
+* `modinfo -F version nvidia` #Check if the kernel module is built.
+* Reboot
 * Test whether the drivers have been installed correctly:
 
 ```shell
@@ -95,7 +96,7 @@ OpenGL vendor string: NVIDIA Corporation
 ## Media Codecs
 * Install these to get proper multimedia playback.
 ````
-sudo dnf groupupdate 'core' 'multimedia' 'sound-and-video' --setop='install_weak_deps=False' --exclude='PackageKit-gstreamer-plugin' --allowerasing && sync
+sudo dnf groupupdate 'core' 'multimedia' 'sound-and-video' --setopt='install_weak_deps=False' --exclude='PackageKit-gstreamer-plugin' --allowerasing && sync
 sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
 sudo dnf install gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
 sudo dnf install lame\* --exclude=lame-devel
@@ -107,7 +108,7 @@ sudo dnf group upgrade --with-optional Multimedia
 
 ### H/W Video Decoding with VA-API 
 * `sudo dnf install ffmpeg ffmpeg-libs libva libva-utils`
-* `sudo dnf install intel-media-driver`
+* `sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing`
 
 ### OpenH264 for Firefox
 * `sudo dnf config-manager --set-enabled fedora-cisco-openh264`
@@ -130,6 +131,7 @@ sudo mkdir -p '/etc/systemd/resolved.conf.d' && sudo -e '/etc/systemd/resolved.c
 DNS=1.1.1.2#security.cloudflare-dns.com 1.0.0.2#security.cloudflare-dns.com 2606:4700:4700::1112#security.cloudflare-dns.com 2606:4700:4700::1002#security.cloudflare-dns.com
 DNSOverTLS=yes
 ```
+
 ## Set UTC Time
 * Used to counter time inconsistencies in dual boot systems
 * `sudo timedatectl set-local-rtc '0'`
@@ -137,10 +139,10 @@ DNSOverTLS=yes
 ## Optimizations
 * The tips below can allow you to squeeze out a little bit more performance from your system. 
 
-### Disable Mitigations 
-* Increases performance in multithreaded systems. The more cores you have in your cpu the greater the performance gain. 5-30% performance gain varying upon systems. Do not follow this if you share services and files through your network or are using fedora in a VM. 
-* Modern intel CPUs (above 10th gen) do not gain noticeable performance improvements upon disabling mitigations. Hence, disabling mitigations can present some security risks against various attacks, however, it still _might_ increase the CPU performance of your system.
-* `sudo grubby --update-kernel=ALL --args="mitigations=off"`
+### Modern Standby
+* Can result in better battery life when your laptop goes to sleep.
+* `sudo grubby --update-kernel=ALL --args="mem_sleep_default=s2idle"`
+* If "s2idle" doesn't work for you i.e. people with alder lake CPUs, then you might want to refer to [this](https://www.reddit.com/r/linuxhardware/comments/ng166t/s3_deep_sleep_not_working/)
 
 ### Enable nvidia-modeset 
 * Useful if you have a laptop with an Nvidia GPU. Necessary for some PRIME-related interoperability features.
@@ -153,6 +155,7 @@ DNSOverTLS=yes
 ### Disable Gnome Software from Startup Apps
 * Gnome software autostarts on boot for some reason, even though it is not required on every boot unless you want it to do updates in the background, this takes at least 100MB of RAM upto 900MB (as reported anecdotically). You can stop it from autostarting by:
 * `sudo rm /etc/xdg/autostart/org.gnome.Software.desktop`
+
 
 ## Gnome Extensions
 * Don't install these if you are using a different spin of Fedora.
@@ -180,8 +183,50 @@ DNSOverTLS=yes
 ## Apps [Optional]
 * Packages for Rar and 7z compressed files support:
  `sudo dnf install -y unzip p7zip p7zip-plugins unrar`
-* These apps will perfectly integrate with your GNOME Desktop:
-* https://apps.gnome.org
+* These are Some Packages that I use and would recommend:
+```
+Amberol
+Blanket
+Builder
+Brave 
+Blender
+Discord
+Drawing
+Deja Dup Backups
+Endeavour 
+Easyeffects
+Extension Manager
+Flatseal
+Foliate
+Footage
+GIMP
+Gnome Tweaks
+Gradience
+Handbrake
+Iotas
+Joplin
+Khronos
+Krita
+Logseq
+lm_sensors
+Onlyoffice
+Overskride
+Parabolic
+Pcloud
+PDF Arranger
+Planify
+Pika backup 
+Snapshot
+Solanum
+Sound Recorder
+Tangram
+Transmission
+Ulauncher
+Upscaler
+Video Trimmer
+VS Codium
+yt-dlp
+```
   
 ## Theming [Optional]
 
@@ -192,13 +237,10 @@ DNSOverTLS=yes
 * https://github.com/EliverLara/Nordic
 * https://github.com/vinceliuice/Orchis-theme
 * https://github.com/vinceliuice/Graphite-gtk-theme
-* https://github.com/imarkoff/Marble-shell-theme
 
 ### Use themes in Flatpaks
 * `sudo flatpak override --filesystem=$HOME/.themes`
-* `sudo flatpak override --filesystem=$HOME/.local/share/icons`
-* `sudo flatpak override --env=GTK_THEME=my-theme`
-* `sudo flatpak override --env=ICON_THEME=my-icon`
+* `sudo flatpak override --env=GTK_THEME=my-theme` 
 
 ### Icon Packs
 * https://github.com/vinceliuice/Tela-icon-theme
