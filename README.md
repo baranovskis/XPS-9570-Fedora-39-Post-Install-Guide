@@ -115,10 +115,6 @@ sudo dnf group upgrade --with-optional Multimedia
 * `sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264`
 * After this enable the OpenH264 Plugin in Firefox's settings.
 
-## Update Flatpak
-* `flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`
-* `flatpak update`
-
 ## Set Hostname
 * `hostnamectl set-hostname YOUR_HOSTNAME`
 
