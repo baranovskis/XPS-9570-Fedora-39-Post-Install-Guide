@@ -20,7 +20,7 @@ max_parallel_downloads=10
 * If you forgot to enable third party repositories during the initial setup window, enable them by pasting the following into the terminal: 
 * `sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm`
 * also while you're at it, install app-stream metadata by
-* `sudo dnf group update core`
+* `sudo dnf update @core`
 
 ## Update 
 * Go into the software center and click on update. Alternatively, you can use the following commands:
@@ -96,7 +96,7 @@ sudo dnf update @sound-and-video # Installs useful Sound and Video complement pa
 * `sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing`
 
 ### OpenH264 for Firefox
-* `sudo dnf config-manager --set-enabled fedora-cisco-openh264`
+* `sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1`
 * `sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264`
 * After this enable the OpenH264 Plugin in Firefox's settings.
 
