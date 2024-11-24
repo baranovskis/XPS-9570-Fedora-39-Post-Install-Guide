@@ -1,5 +1,5 @@
- # Fedora 39 Post Install Guide
- Things to do after installing Fedora 39 (specially for Dell XPS 9570) 
+ # Fedora 41 Post Install Guide
+ Things to do after installing Fedora 41 (specially for Dell XPS 9570) 
  
 ## Faster Updates
 * `sudo nano /etc/dnf/dnf.conf` 
@@ -11,18 +11,16 @@ installonly_limit=3
 clean_requirements_on_remove=True 
 best=False 
 skip_if_unavailable=True 
-fastestmirror=1 
 max_parallel_downloads=10 
-deltarpm=true
 ``` 
-* Note: The `fastestmirror=1` plugin can be counterproductive at times, use it at your own discretion. Set it to `fastestmirror=0` if you are facing bad download speeds. Many users have reported better download speeds with the plugin enables so it is there by default.
+* Note: The `fastestmirror=1` and `deltarpm=true` arguments were removed. Avoid using these even if you find them in other guides. They are counterproductive at best.
 
 ## RPM Fusion
-* Fedora has disabled the repositories for a lot of free and non-free .rpm packages by default. Follow this if you want to use non-free software like Steam, Discord and some multimedia codecs etc. As a general rule of thumb its advised to do this get access to many mainstream useful programs.
+* Fedora has disabled the repositories for a lot of free and non-free .rpm packages by default. Follow this if you want to use non-free software like Steam, Discord and some multimedia codecs etc. As a general rule of thumb it is advised to do this to get access to many mainstream useful programs.
 * If you forgot to enable third party repositories during the initial setup window, enable them by pasting the following into the terminal: 
 * `sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm`
 * also while you're at it, install app-stream metadata by
-* `sudo dnf groupupdate core`
+* `sudo dnf group update core`
 
 ## Update 
 * Go into the software center and click on update. Alternatively, you can use the following commands:
@@ -33,11 +31,15 @@ deltarpm=true
 ## Firmware
 * If your system supports firmware update delivery through lvfs, update your device firmware by:
 ```
-sudo fwupdmgr get-devices 
-sudo fwupdmgr refresh --force 
-sudo fwupdmgr get-updates 
+sudo fwupdmgr refresh --force
+sudo fwupdmgr get-devices # Lists devices with available updates.
+sudo fwupdmgr get-updates # Fetches list of available updates.
 sudo fwupdmgr update
 ```
+
+## Flatpak
+* Fedora doesn't include all non-free flatpaks by default. The command below enables access to all the flathub flatpaks. Particularly useful for users of Fedora KDE and other spins since they do not get the "Enable Third Party Repositories" option on initial boot.
+* `flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`
 
 ## NVIDIA Drivers
 * Only follow this if you have a NVIDIA gpu. Also, don't follow this if you have a gpu which has dropped support for newer driver releases i.e. anything earlier than nvidia GT/GTX 600, 700, 800, 900, 1000, 1600 and RTX 2000, 3000, 4000 series. Fedora comes preinstalled with NOUVEAU drivers which may or may not work better on those remaining older GPUs. This should be followed by Desktop and Laptop users alike.
@@ -77,34 +79,17 @@ OpenGL vendor string: NVIDIA Corporation
 * Last, but not least, let's fix a sleep state problem that's happening to XPS 15s, including, but not limited to, 9560s and 9570s:
 * `sudo grubby --update-kernel=ALL --args="mem_sleep_default=deep"`
 
-## Battery Life
-* Follow this if you have a Laptop and are facing sub optimal battery backup.
-* power-profiles-daemon which come pre-configured works great on a great majority of systems but still in case you're facing sub-optimal battery backup you try installing tlp by:
-* `sudo dnf install tlp tlp-rdw`
-* `sudo systemctl start tlp`
-* `sudo systemctl enable tlp`
-* and mask power-profiles-daemon by:
-* `sudo systemctl mask power-profiles-daemon`
-* and mask systemd-rfkill by:
-* `sudo systemctl mask systemd-rfkill.service systemd-rfkill.socket`
-* Also install powertop by:
-* `sudo dnf install powertop`
-* `sudo systemctl start powertop`
-* `sudo systemctl enable powertop`
-* `sudo powertop --auto-tune`
-
 ## Media Codecs
 * Install these to get proper multimedia playback.
 ````
-sudo dnf groupupdate 'core' 'multimedia' 'sound-and-video' --setopt='install_weak_deps=False' --exclude='PackageKit-gstreamer-plugin' --allowerasing && sync
-sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
-sudo dnf install gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
-sudo dnf install lame\* --exclude=lame-devel
-sudo dnf group upgrade --with-optional Multimedia
+sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing # Switch to full FFMPEG.
+sudo dnf group install Multimedia
+sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin # Installs gstreamer components. Required if you use Gnome Videos and other dependent applications.
+sudo dnf update @sound-and-video # Installs useful Sound and Video complement packages.
 ````
 
 ## H/W Video Acceleration
-* Helps decrease load on the CPU when watching videos online by alloting the rendering to the dGPU/iGPU. It is quite helpful in increasing battery backup on laptops.
+* Helps decrease load on the CPU when watching videos online by alloting the rendering to the dGPU/iGPU. Quite helpful in increasing battery backup on laptops.
 
 ### H/W Video Decoding with VA-API 
 * `sudo dnf install ffmpeg ffmpeg-libs libva libva-utils`
@@ -135,10 +120,10 @@ DNSOverTLS=yes
 ## Optimizations
 * The tips below can allow you to squeeze out a little bit more performance from your system. 
 
-### Modern Standby
-* Can result in better battery life when your laptop goes to sleep.
-* `sudo grubby --update-kernel=ALL --args="mem_sleep_default=s2idle"`
-* If "s2idle" doesn't work for you i.e. people with alder lake CPUs, then you might want to refer to [this](https://www.reddit.com/r/linuxhardware/comments/ng166t/s3_deep_sleep_not_working/)
+### Disable Mitigations 
+* Increases performance in multithreaded systems. The more cores you have in your cpu the greater the performance gain. 5-30% performance gain varying upon systems. Do not follow this if you share services and files through your network or are using fedora in a VM. 
+* Modern intel CPUs (above 10th gen) do not gain noticeable performance improvements upon disabling mitigations. Hence, disabling mitigations can present some security risks against various attacks, however, it still _might_ increase the CPU performance of your system.
+* `sudo grubby --update-kernel=ALL --args="mitigations=off"`
 
 ### Enable nvidia-modeset 
 * Useful if you have a laptop with an Nvidia GPU. Necessary for some PRIME-related interoperability features.
@@ -151,7 +136,6 @@ DNSOverTLS=yes
 ### Disable Gnome Software from Startup Apps
 * Gnome software autostarts on boot for some reason, even though it is not required on every boot unless you want it to do updates in the background, this takes at least 100MB of RAM upto 900MB (as reported anecdotically). You can stop it from autostarting by:
 * `sudo rm /etc/xdg/autostart/org.gnome.Software.desktop`
-
 
 ## Gnome Extensions
 * Don't install these if you are using a different spin of Fedora.
