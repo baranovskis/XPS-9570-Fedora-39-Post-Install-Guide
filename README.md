@@ -12,28 +12,31 @@ clean_requirements_on_remove=True
 best=False 
 skip_if_unavailable=True 
 max_parallel_downloads=10 
-``` 
-* Note: The `fastestmirror=1` and `deltarpm=true` arguments were removed. Avoid using these even if you find them in other guides. They are counterproductive at best.
+```
 
 ## RPM Fusion
-* Fedora has disabled the repositories for a lot of free and non-free .rpm packages by default. Follow this if you want to use non-free software like Steam, Discord and some multimedia codecs etc. As a general rule of thumb it is advised to do this to get access to many mainstream useful programs.
-* If you forgot to enable third party repositories during the initial setup window, enable them by pasting the following into the terminal: 
-* `sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm`
-* also while you're at it, install app-stream metadata by
-* `sudo dnf update @core`
+Fedora has disabled the repositories for a lot of free and non-free .rpm packages by default. Follow this if you want to use non-free software like Steam, Discord and some multimedia codecs etc. As a general rule of thumb it is advised to do this to get access to many mainstream useful programs.
+
+If you forgot to enable third party repositories during the initial setup window, enable them by pasting the following into the terminal: 
+```
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf update @core
+```
 
 ## Update 
 * Go into the software center and click on update. Alternatively, you can use the following commands:
-* `sudo dnf -y update`
-* `sudo dnf -y upgrade --refresh`
+```
+sudo dnf -y update
+sudo dnf -y upgrade --refresh
+```
 * Reboot
 
 ## Firmware
 * If your system supports firmware update delivery through lvfs, update your device firmware by:
 ```
-sudo fwupdmgr refresh --force
-sudo fwupdmgr get-devices # Lists devices with available updates.
-sudo fwupdmgr get-updates # Fetches list of available updates.
+sudo fwupdmgr get-devices 
+sudo fwupdmgr refresh --force 
+sudo fwupdmgr get-updates 
 sudo fwupdmgr update
 ```
 
@@ -61,8 +64,7 @@ modinfo -V nvidia
 __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia glxinfo | grep vendor
 ```
 
-* The output should look like this:
-
+The output should look like this:
 ```
 nvidia_drm            118784  4
 nvidia_modeset       1585152  2 nvidia_drm
@@ -77,7 +79,7 @@ OpenGL vendor string: NVIDIA Corporation
 ```
 
 * Last, but not least, let's fix a sleep state problem that's happening to XPS 15s, including, but not limited to, 9560s and 9570s:
-* `sudo grubby --update-kernel=ALL --args="mem_sleep_default=deep"`
+```sudo grubby --update-kernel=ALL --args="mem_sleep_default=deep```
 
 ## Media Codecs
 * Install these to get proper multimedia playback.
@@ -92,19 +94,23 @@ sudo dnf install @sound-and-video # Installs useful Sound and Video complement p
 * Helps decrease load on the CPU when watching videos online by alloting the rendering to the dGPU/iGPU. Quite helpful in increasing battery backup on laptops.
 
 ### H/W Video Decoding with VA-API 
-* `sudo dnf install ffmpeg ffmpeg-libs libva libva-utils`
-* `sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing`
+```
+sudo dnf install ffmpeg ffmpeg-libs libva libva-utils
+sudo dnf swap libva-intel-media-driver intel-media-driver --allowerasing
+```
 
 ### OpenH264 for Firefox
-* `sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1`
-* `sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264`
-* After this enable the OpenH264 Plugin in Firefox's settings.
+After this enable the OpenH264 Plugin in Firefox's settings.
+```
+sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
+sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264
+```
 
 ## Set Hostname
-* `hostnamectl set-hostname YOUR_HOSTNAME`
+```hostnamectl set-hostname YOUR_HOSTNAME```
 
 ## Custom DNS Servers
-* For people that want to setup custom DNS servers for better privacy
+For people that want to setup custom DNS servers for better privacy
 ```
 sudo mkdir -p '/etc/systemd/resolved.conf.d' && sudo -e '/etc/systemd/resolved.conf.d/99-dns-over-tls.conf'
 
@@ -114,28 +120,29 @@ DNSOverTLS=yes
 ```
 
 ## Set UTC Time
-* Used to counter time inconsistencies in dual boot systems
-* `sudo timedatectl set-local-rtc '0'`
+Used to counter time inconsistencies in dual boot systems
+```sudo timedatectl set-local-rtc '0'```
 
 ## Optimizations
 * The tips below can allow you to squeeze out a little bit more performance from your system. 
 
 ### Disable Mitigations 
-* Increases performance in multithreaded systems. The more cores you have in your cpu the greater the performance gain. 5-30% performance gain varying upon systems. Do not follow this if you share services and files through your network or are using fedora in a VM. 
-* Modern intel CPUs (above 10th gen) do not gain noticeable performance improvements upon disabling mitigations. Hence, disabling mitigations can present some security risks against various attacks, however, it still _might_ increase the CPU performance of your system.
-* `sudo grubby --update-kernel=ALL --args="mitigations=off"`
+Increases performance in multithreaded systems. The more cores you have in your cpu the greater the performance gain. 5-30% performance gain varying upon systems. Do not follow this if you share services and files through your network or are using fedora in a VM. 
+
+Modern intel CPUs (above 10th gen) do not gain noticeable performance improvements upon disabling mitigations. Hence, disabling mitigations can present some security risks against various attacks, however, it still _might_ increase the CPU performance of your system.
+```sudo grubby --update-kernel=ALL --args="mitigations=off"```
 
 ### Enable nvidia-modeset 
-* Useful if you have a laptop with an Nvidia GPU. Necessary for some PRIME-related interoperability features.
-* `sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"`
+Useful if you have a laptop with an Nvidia GPU. Necessary for some PRIME-related interoperability features.
+```sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"```
 
 ### Disable `NetworkManager-wait-online.service`
-* Disabling it can decrease the boot time by at least ~15s-20s:
-* `sudo systemctl disable NetworkManager-wait-online.service`
+Disabling it can decrease the boot time by at least ~15s-20s:
+```sudo systemctl disable NetworkManager-wait-online.service```
 
 ### Disable Gnome Software from Startup Apps
-* Gnome software autostarts on boot for some reason, even though it is not required on every boot unless you want it to do updates in the background, this takes at least 100MB of RAM upto 900MB (as reported anecdotically). You can stop it from autostarting by:
-* `sudo rm /etc/xdg/autostart/org.gnome.Software.desktop`
+Gnome software autostarts on boot for some reason, even though it is not required on every boot unless you want it to do updates in the background, this takes at least 100MB of RAM upto 900MB (as reported anecdotically). You can stop it from autostarting by:
+```sudo rm /etc/xdg/autostart/org.gnome.Software.desktop```
 
 ## Gnome Extensions
 * Don't install these if you are using a different spin of Fedora.
