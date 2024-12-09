@@ -75,7 +75,7 @@ OpenGL vendor string: NVIDIA Corporation
 ```
 
 * Last, but not least, let's fix a sleep state problem that's happening to XPS 15s, including, but not limited to, 9560s and 9570s:
-```sudo grubby --update-kernel=ALL --args="mem_sleep_default=deep```
+```sudo grubby --update-kernel=ALL --args="mem_sleep_default=deep"```
 
 ## Media Codecs
 * Install these to get proper multimedia playback.
