@@ -5,11 +5,7 @@
 * `sudo nano /etc/dnf/dnf.conf` 
 * Copy and replace the text with the following:
 ```
-[main] 
-gpgcheck=1 
-installonly_limit=3 
-clean_requirements_on_remove=True 
-best=False 
+[main]
 skip_if_unavailable=True 
 max_parallel_downloads=10 
 ```
